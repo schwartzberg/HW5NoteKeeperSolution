@@ -1,0 +1,58 @@
+﻿@page
+@model HW5NoteKeeperSolution.Pages.Notes.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Note</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Note.Id" />
+            <div class="form-group">
+<span class="text-danger">*</span>
+                <label asp-for="Note.Summary" class="control-label"></label>
+                <input asp-for="Note.Summary" class="form-control" aria-required="true"/>
+                <span asp-validation-for="Note.Summary" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+<span class="text-danger">*</span>
+                <label asp-for="Note.Details" class="control-label"></label>
+                <input asp-for="Note.Details" class="form-control" aria-required="true"/>
+                <span asp-validation-for="Note.Details" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+<span class="text-danger">*</span>
+                <label asp-for="Note.CreatedDateUtc" class="control-label"></label>
+                <input asp-for="Note.CreatedDateUtc" class="form-control" aria-required="true"/>
+                <span asp-validation-for="Note.CreatedDateUtc" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Note.ModifiedDateUtc" class="control-label"></label>
+                <input asp-for="Note.ModifiedDateUtc" class="form-control" />
+                <span asp-validation-for="Note.ModifiedDateUtc" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Note.UserRealmId" class="control-label"></label>
+                <input asp-for="Note.UserRealmId" class="form-control" />
+                <span asp-validation-for="Note.UserRealmId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

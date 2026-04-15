@@ -1,0 +1,60 @@
+﻿@page
+@model HW5NoteKeeperSolution.Pages.Notes.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Note[0].Summary)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Note[0].Details)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Note[0].CreatedDateUtc)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Note[0].ModifiedDateUtc)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Note[0].UserRealmId)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Note) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Summary)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Details)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedDateUtc)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ModifiedDateUtc)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UserRealmId)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
