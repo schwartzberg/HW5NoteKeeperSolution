@@ -1,13 +1,19 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Welcome";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to NoteKeeper</h1>
+    <p class="lead">
+        Welcome to the NoteKeeper application. This application allows users to manage their notes.
+        Please login to manage your notes.
+    </p>
+    <p>
+        <a class="btn btn-primary btn-lg"
+           asp-area="MicrosoftIdentity"
+           asp-controller="Account"
+           asp-action="SignIn">Sign in</a>
+    </p>
 </div>
-
-<div>Graph API result</div>
-<div>@ViewData["GraphApiResult"]</div>

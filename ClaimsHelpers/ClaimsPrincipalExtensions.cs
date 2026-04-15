@@ -2,7 +2,10 @@ using System.Security.Claims;
 
 namespace HW5NoteKeeperSolution
 {
-
+    /// <summary>
+    /// Extension methods for reading Microsoft Entra claims from a <see cref="ClaimsPrincipal"/>
+    /// using the strongly-typed <see cref="AzureADClaimTypes"/> constants.
+    /// </summary>
     // Helper methods to read the claims exposed on the authenticated principal.
     public static class ClaimsPrincipalExtensions
     {

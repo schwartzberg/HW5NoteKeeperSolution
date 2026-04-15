@@ -6,12 +6,23 @@ using System.Text.Json;
 
 namespace HW5NoteKeeperSolution.Services
 {
+    /// <summary>
+    /// Calls the Azure OpenAI chat completion endpoint to generate keyword tags from a note's details.
+    /// Sends a structured JSON-schema response format request and deserializes the result into
+    /// a <see cref="KeyTagsResponse"/>.
+    /// </summary>
     public class TagGeneratorService : ITagGeneratorService
     {
         private readonly IChatClient _chatClient;
         private readonly AISettings _settings;
         private readonly ILogger<TagGeneratorService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="TagGeneratorService"/>.
+        /// </summary>
+        /// <param name="chatClient">The <see cref="IChatClient"/> used to call the Azure OpenAI endpoint.</param>
+        /// <param name="settings">AI model settings (temperature, top-p, max tokens, etc.).</param>
+        /// <param name="logger">Logger for generation diagnostics.</param>
         public TagGeneratorService(
             IChatClient chatClient,
             AISettings settings,
@@ -22,6 +33,7 @@ namespace HW5NoteKeeperSolution.Services
             _logger = logger;
         }
 
+        /// <inheritdoc/>
         public async Task<KeyTagsResponse> GenerateTagsAsync(string details, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(details))

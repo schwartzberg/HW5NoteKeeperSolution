@@ -18,8 +18,16 @@ using MSFTBuilder = Microsoft.AspNetCore.Builder;
 
 namespace HW5NoteKeeperSolution
 {
+    /// <summary>
+    /// Application entry point. Configures the ASP.NET Core host, registers all services,
+    /// applies EF Core migrations, and starts the web application.
+    /// </summary>
     public partial class Program
     {
+        /// <summary>
+        /// The application entry point. Builds and runs the web host asynchronously.
+        /// </summary>
+        /// <param name="args">Command-line arguments passed to the host builder.</param>
         public static async Task Main(string[] args)
         {
             var builder = MSFTBuilder.WebApplication.CreateBuilder(args);
@@ -49,6 +57,11 @@ namespace HW5NoteKeeperSolution
             {
                 options.MapInboundClaims = false;
                 options.TokenValidationParameters.NameClaimType = "name";
+
+                // After a successful sign-out, redirect the user to the welcome page.
+                // The OIDC middleware calls this URI once the signout callback from Entra completes.
+                options.SignedOutRedirectUri = "/";
+
                 options.Events ??= new OpenIdConnectEvents();
                 options.Events.OnTokenValidated = context =>
                 {

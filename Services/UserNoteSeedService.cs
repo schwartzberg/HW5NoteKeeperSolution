@@ -6,6 +6,11 @@ using System.Collections.Concurrent;
 
 namespace HW5NoteKeeperSolution.Services
 {
+    /// <summary>
+    /// Creates the four default seed notes (with tags and blob attachments) for a new user
+    /// on their first authenticated request. Uses a per-user lock and an in-memory cache
+    /// to guarantee idempotency under concurrent requests.
+    /// </summary>
     public class UserNoteSeedService : IUserNoteSeedService
     {
         private static readonly SeedNoteDefinition[] SeedNotes =
@@ -24,6 +29,14 @@ namespace HW5NoteKeeperSolution.Services
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger<UserNoteSeedService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="UserNoteSeedService"/>.
+        /// </summary>
+        /// <param name="context">EF Core context used to query and persist seed notes and tags.</param>
+        /// <param name="noteTagService">Service that generates and attaches AI tags to each seed note.</param>
+        /// <param name="storageInitializer">Service that creates blob containers and uploads seed attachments.</param>
+        /// <param name="memoryCache">In-memory cache used to skip re-seeding for users already seeded in this process lifetime.</param>
+        /// <param name="logger">Logger for seeding progress and completion messages.</param>
         public UserNoteSeedService(
             NoteKeeperContext context,
             INoteTagService noteTagService,
@@ -38,6 +51,7 @@ namespace HW5NoteKeeperSolution.Services
             _logger = logger;
         }
 
+        /// <inheritdoc/>
         public async Task EnsureSeedDataAsync(string userRealmId, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(userRealmId))

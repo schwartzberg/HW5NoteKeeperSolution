@@ -4,6 +4,11 @@ using HW5NoteKeeperSolution.Settings;
 
 namespace HW5NoteKeeperSolution.Data
 {
+    /// <summary>
+    /// Azure Blob Storage implementation of <see cref="IAzureStorageInitializer"/>.
+    /// Creates per-note blob containers and uploads seed attachments from the local
+    /// <c>AzureStorageAttachments</c> directory.
+    /// </summary>
     public class AzureStorageInitializer : IAzureStorageInitializer
     {
         private readonly BlobServiceClient _blobServiceClient;
@@ -18,6 +23,12 @@ namespace HW5NoteKeeperSolution.Data
             { "Azure tips", new[] { "AzureLogo.png", "AzureTipsAndTricks.pdf" } }
         };
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="AzureStorageInitializer"/>.
+        /// </summary>
+        /// <param name="blobServiceClient">The Azure Blob service client used to manage containers and blobs.</param>
+        /// <param name="operationalSettings">Operational settings including the list of protected container names.</param>
+        /// <param name="logger">Logger for informational and warning messages.</param>
         public AzureStorageInitializer(
             BlobServiceClient blobServiceClient,
             StorageOperationalSettings operationalSettings,
@@ -28,8 +39,13 @@ namespace HW5NoteKeeperSolution.Data
             _logger = logger;
         }
 
+        /// <summary>
+        /// Gets the mapping from note summary text to the seed attachment file names
+        /// that are uploaded to the corresponding blob container.
+        /// </summary>
         public IReadOnlyDictionary<string, string[]> AttachmentMapping => _attachmentMapping;
 
+        /// <inheritdoc/>
         public async Task<bool> InitializeAsync(
             Guid noteId,
             string summary,

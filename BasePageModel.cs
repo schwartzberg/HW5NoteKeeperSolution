@@ -4,6 +4,9 @@ using System.Reflection;
 
 namespace HW5NoteKeeperSolution.Pages
 {
+    /// <summary>
+    /// Base Razor Page model that injects the application version into every page's <c>ViewData</c>.
+    /// </summary>
     public class BasePageModel : PageModel
     {
         /// <summary>
