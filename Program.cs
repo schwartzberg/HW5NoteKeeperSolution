@@ -29,7 +29,7 @@ namespace HW5NoteKeeperSolution
                 builder.AddAzureWebAppDiagnostics();
             });
             var startupLogger = loggerFactory.CreateLogger("Program");
-            startupLogger.LogInformation("Starting application..."); 
+            startupLogger.LogInformationWithCallerInfo("Starting application..."); 
             
             //var initialScopes = builder.Configuration["DownstreamApi:Scopes"]?.Split(' ') ?? builder.Configuration["MicrosoftGraph:Scopes"]?.Split(' ');
             // The home page calls Microsoft Graph for the signed-in user's profile.
@@ -39,7 +39,7 @@ namespace HW5NoteKeeperSolution
                 ?? builder.Configuration["MicrosoftGraph:Scopes"]?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 ?? Array.Empty<string>();
 
-            builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
+            builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, (OpenIdConnectOptions options) =>
             {
                 // Keep the OpenID Connect claim names exactly as the identity provider issues them.
                 // Without this setting, ASP.NET Core remaps many standard OIDC claim names to older
@@ -74,11 +74,11 @@ namespace HW5NoteKeeperSolution
 
                     // Emit every claim key/value pair so the demo can confirm exactly which claim
                     // types Entra External ID and the ASP.NET Core handler expose at runtime.
-                    logger.LogInformation("User login completed. Logging {ClaimCount} claims.", identity.Claims.Count());
+                    logger.LogInformationWithCallerInfo($"User login completed. Logging {identity.Claims.Count()} claims.");
 
                     foreach (var claim in identity.Claims)
                     {
-                        logger.LogInformation("Claim type: {ClaimType}; value: {ClaimValue}", claim.Type, claim.Value);
+                        logger.LogInformationWithCallerInfo($"Claim type: {claim.Type}; value: {claim.Value}");
                     }
 
                     return Task.CompletedTask;
@@ -101,18 +101,14 @@ namespace HW5NoteKeeperSolution
                 options.FallbackPolicy = options.DefaultPolicy;
             });
 
-            //builder.Services.AddRazorPages()
-            //    .AddMicrosoftIdentityUI();
             builder.Services.AddRazorPages(options =>
             {
                 // The landing page is intentionally public for the demo.
                 // With a fallback policy in place, any page that should remain public must be
                 // explicitly marked anonymous here or with an [AllowAnonymous] attribute.
-                options.Conventions.AllowAnonymousToPage("/Index");
+                //options.Conventions.AllowAnonymousToPage("/Index");
             })
-          // Adds the built-in Microsoft Identity UI endpoints used for sign-in, sign-out,
-          // and access-denied flows in Razor-based web apps.
-          .AddMicrosoftIdentityUI();
+            .AddMicrosoftIdentityUI();
 
 
             var app = builder.Build();
@@ -157,5 +153,5 @@ namespace HW5NoteKeeperSolution
 
             app.Run();
         }
-    }
+    } 
 }
