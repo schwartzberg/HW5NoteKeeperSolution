@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
- 
+using HW5NoteKeeperSolution.Models;
+
 namespace HW5NoteKeeperSolution.Data
 {
     public class NoteKeeperContext : DbContext
@@ -13,6 +10,23 @@ namespace HW5NoteKeeperSolution.Data
         {
         }
 
-        //public DbSet<HW5NoteKeeperSolution.Models.Movie> Movie { get; set; } = default!;
+        public DbSet<Note> Notes { get; set; } = default!;
+
+        public DbSet<Tag> Tags { get; set; } = default!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Tag>().ToTable("Tag");
+
+            modelBuilder.Entity<Note>()
+                .ToTable("NoteMultiTenant")
+                .HasMany(note => note.Tags)
+                .WithOne(tag => tag.Note)
+                .HasForeignKey(tag => tag.NoteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Note>()
+                .HasIndex(note => note.UserRealmId);
+        }
     }
 }
