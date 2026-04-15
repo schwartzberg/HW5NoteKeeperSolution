@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HW5NoteKeeperSolution.Data.Migrations
 {
     [DbContext(typeof(NoteKeeperContext))]
-    [Migration("20260415185157_InitialNoteMultiTenant")]
-    partial class InitialNoteMultiTenant
+    [Migration("20260415193219_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

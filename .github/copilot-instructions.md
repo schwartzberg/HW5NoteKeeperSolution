@@ -40,6 +40,8 @@
 **5. Work Collaboratively**
 - Treat the user as an active troubleshooting partner, especially for Azure, database, and deployment issues.
 - When something operational fails, prefer a short handoff with the concrete error over repeated blind retries.
+- On configuration, identity, migration, and environment problems, pause quickly, share the exact blocker, and let the user guide the next step instead of looping through speculative fixes.
+- If the user is actively working in Visual Studio, SSMS, or Azure while the task is underway, coordinate with that workflow and avoid duplicating risky reset operations without confirming first.
 - Never copy passwords, API keys, or other secrets into source-controlled files, even when they appear in prompts or screenshots.
 
 ## HW5 Project Overview
@@ -72,6 +74,17 @@ The app is multi-tenant at the data level:
 - Keep `Program` public so `WebApplicationFactory` can host the app in tests.
 - Prefer a separate test project for verification work.
 - Add focused unit tests for seeding logic and only a thin end-to-end trigger test for first-request behavior.
+
+### EF migrations and `Update-Database` from PMC
+
+- `dotnet ef database update` from the CLI **will fail** with a `SELECT permission denied on __EFMigrationsHistory` error when the local CLI identity does not have sufficient Azure SQL rights.
+- The correct approach is to run `Update-Database` from the **Visual Studio Package Manager Console** (Tools → NuGet Package Manager → Package Manager Console).
+- Before running `Update-Database` from PMC, add the design-time SQL login credentials to **`secrets.json`** (user secrets) so EF tools can authenticate at design time.
+  - The connection string in `secrets.json` should use the SQL login (username/password) that has `db_owner` or equivalent rights on the Azure SQL database.
+  - Example key in `secrets.json`: `"ConnectionStrings:DefaultConnection"` with a connection string using `User ID=...;Password=...` instead of `Authentication=Active Directory Default`.
+  - This secret is **never committed** to source control; it lives only in the local user secrets store.
+- In PMC: set **Startup Project** = `HW5NoteKeeperSolution`, set **Default Project** = `HW5NoteKeeperSolution`, then run `Update-Database`.
+- After `Update-Database` succeeds, you can revert `secrets.json` to use managed identity for normal app operation.
 
 ### Documentation patterns
 - Update `ProjectNotes.md` as HW5-specific Azure resources and behaviors are introduced.

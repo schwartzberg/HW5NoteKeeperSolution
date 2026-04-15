@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="HW5NoteKeeperSolution.csproj" />
+  <Project Path="../HW5NoteKeeperSolution.Tests/HW5NoteKeeperSolution.Tests.csproj" />
 </Solution>

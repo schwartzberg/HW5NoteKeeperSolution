@@ -36,12 +36,16 @@ namespace HW5NoteKeeperSolution
             var initialScopes = builder.Configuration["DownstreamApi:Scopes"]?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 ?? builder.Configuration["MicrosoftGraph:Scopes"]?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 ?? Array.Empty<string>();
+ 
+            string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+              ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not found and is required.");
 
             builder.Services.AddDbContext<NoteKeeperContext>(options =>
-               options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")
-               ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
+            {
+                options.UseSqlServer(connectionString);
+            });
 
-            builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
+            builder.Services.PostConfigure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
                 options.MapInboundClaims = false;
                 options.TokenValidationParameters.NameClaimType = "name";
@@ -80,15 +84,7 @@ namespace HW5NoteKeeperSolution
             });
 
             builder.Services.AddMemoryCache();
-
-            string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
-
-            builder.Services.AddDbContext<NoteKeeperContext>(options =>
-            {
-                options.UseSqlServer(connectionString);
-            });
-
+              
             AISettings aiSettings = builder.Configuration.GetSection("AzureOpenAI").Get<AISettings>()
                 ?? throw new InvalidOperationException("AzureOpenAI configuration is required.");
             ValidateAISettings(aiSettings);
