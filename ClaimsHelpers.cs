@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Security.Principal;
+using Microsoft.Identity.Web;
 
 namespace HW5NoteKeeperSolution;
 
@@ -36,6 +37,24 @@ public static class ClaimsHelpers
             return null;
         }
 
-        return claimsIdentity.FindFirst("name")?.Value;
+        string? firstName = claimsIdentity.FindFirst(ClaimTypes.GivenName)?.Value;
+        string? lastName = claimsIdentity.FindFirst(ClaimTypes.Surname)?.Value;
+
+        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+        var objId = claimsPrincipal.GetObjectIdentifier();
+        var objId1= claimsPrincipal.ObjectIdentifier();
+        var objId2 = claimsPrincipal.GetDisplayName();
+        var objId3 = claimsPrincipal.GetUserPrincipalName();
+
+        //use this to differentiate between logged in users 
+        string? objectIdentifier = claimsIdentity.FindFirst(ClaimConstants.ObjectId)?.Value;
+       
+
+        if (firstName == null && lastName == null)
+        {
+            return claimsIdentity.FindFirst("name")?.Value;
+        }
+
+        return $"{firstName} {lastName}".Trim();
     }
 }
