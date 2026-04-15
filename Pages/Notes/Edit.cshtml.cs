@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using HW5NoteKeeperSolution.Data;
 using HW5NoteKeeperSolution.Models;
+using HW5NoteKeeperSolution.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HW5NoteKeeperSolution.Pages.Notes
 {
-    public class EditModel : PageModel
+    public class EditModel : NoteKeeperBasePageModel
     {
-        private readonly HW5NoteKeeperSolution.Data.NoteKeeperContext _context;
+        private readonly INoteTagService _noteTagService;
 
-        public EditModel(HW5NoteKeeperSolution.Data.NoteKeeperContext context)
+        public EditModel(NoteKeeperContext context, INoteTagService noteTagService) : base(context)
         {
-            _context = context;
+            _noteTagService = noteTagService;
         }
 
         [BindProperty]
@@ -30,17 +25,19 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 return NotFound();
             }
 
-            var note =  await _context.Notes.FirstOrDefaultAsync(m => m.Id == id);
+            var note = await Context.Notes
+                .Include(n => n.Tags)
+                .FirstOrDefaultAsync(n => n.Id == id && n.UserRealmId == User.GetObjectIdentifier());
+
             if (note == null)
             {
                 return NotFound();
             }
+
             Note = note;
             return Page();
         }
 
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more information, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -48,11 +45,45 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 return Page();
             }
 
-            _context.Attach(Note).State = EntityState.Modified;
+            // Guard: the UserRealmId posted back must match the authenticated user.
+            if (Note.UserRealmId != User.GetObjectIdentifier())
+            {
+                ModelState.AddModelError("realm", "This note cannot be updated because the user does not have access to it.");
+                return Page();
+            }
+
+            // Re-load from DB so we can compare Details and manage tags correctly.
+            var existingNote = await Context.Notes
+                .Include(n => n.Tags)
+                .FirstOrDefaultAsync(n => n.Id == Note.Id && n.UserRealmId == User.GetObjectIdentifier());
+
+            if (existingNote == null)
+            {
+                return NotFound();
+            }
+
+            bool detailsChanged = !string.Equals(existingNote.Details, Note.Details, StringComparison.Ordinal);
+
+            existingNote.Summary = Note.Summary;
+            existingNote.Details = Note.Details;
+            existingNote.ModifiedDateUtc = DateTimeOffset.UtcNow;
+
+            if (detailsChanged)
+            {
+                // Explicitly remove old tags via DbContext before regenerating,
+                // then call the service to generate and attach new tags.
+                var tagsToRemove = existingNote.Tags.ToList();
+                if (tagsToRemove.Any())
+                {
+                    Context.Tags.RemoveRange(tagsToRemove);
+                    existingNote.Tags.Clear();
+                }
+                await _noteTagService.ApplyGeneratedTagsAsync(existingNote, replaceExistingTags: false);
+            }
 
             try
             {
-                await _context.SaveChangesAsync();
+                await Context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -60,10 +91,7 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return RedirectToPage("./Index");
@@ -71,7 +99,7 @@ namespace HW5NoteKeeperSolution.Pages.Notes
 
         private bool NoteExists(Guid id)
         {
-            return _context.Notes.Any(e => e.Id == id);
+            return Context.Notes.Any(n => n.Id == id && n.UserRealmId == User.GetObjectIdentifier());
         }
     }
 }

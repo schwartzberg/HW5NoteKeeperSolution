@@ -14,33 +14,18 @@
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Note.Id" />
+            <input type="hidden" asp-for="Note.UserRealmId" />
             <div class="form-group">
-<span class="text-danger">*</span>
+                <span class="text-danger">*</span>
                 <label asp-for="Note.Summary" class="control-label"></label>
                 <input asp-for="Note.Summary" class="form-control" aria-required="true"/>
                 <span asp-validation-for="Note.Summary" class="text-danger"></span>
             </div>
             <div class="form-group">
-<span class="text-danger">*</span>
+                <span class="text-danger">*</span>
                 <label asp-for="Note.Details" class="control-label"></label>
-                <input asp-for="Note.Details" class="form-control" aria-required="true"/>
+                <textarea asp-for="Note.Details" class="form-control" rows="5" aria-required="true"></textarea>
                 <span asp-validation-for="Note.Details" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-<span class="text-danger">*</span>
-                <label asp-for="Note.CreatedDateUtc" class="control-label"></label>
-                <input asp-for="Note.CreatedDateUtc" class="form-control" aria-required="true"/>
-                <span asp-validation-for="Note.CreatedDateUtc" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Note.ModifiedDateUtc" class="control-label"></label>
-                <input asp-for="Note.ModifiedDateUtc" class="form-control" />
-                <span asp-validation-for="Note.ModifiedDateUtc" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Note.UserRealmId" class="control-label"></label>
-                <input asp-for="Note.UserRealmId" class="form-control" />
-                <span asp-validation-for="Note.UserRealmId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

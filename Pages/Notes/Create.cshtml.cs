@@ -1,33 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using HW5NoteKeeperSolution.Data;
 using HW5NoteKeeperSolution.Models;
+using HW5NoteKeeperSolution.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HW5NoteKeeperSolution.Pages.Notes
 {
-    public class CreateModel : PageModel
+    public class CreateModel : NoteKeeperBasePageModel
     {
-        private readonly HW5NoteKeeperSolution.Data.NoteKeeperContext _context;
+        private readonly INoteTagService _noteTagService;
 
-        public CreateModel(HW5NoteKeeperSolution.Data.NoteKeeperContext context)
+        public CreateModel(NoteKeeperContext context, INoteTagService noteTagService) : base(context)
         {
-            _context = context;
+            _noteTagService = noteTagService;
         }
 
-        public IActionResult OnGet()
-        {
-            return Page();
-        }
+        public IActionResult OnGet() => Page();
 
         [BindProperty]
         public Note Note { get; set; } = default!;
 
-        // For more information, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -35,8 +26,14 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 return Page();
             }
 
-            _context.Notes.Add(Note);
-            await _context.SaveChangesAsync();
+            Note.Id = Guid.NewGuid();
+            Note.UserRealmId = User.GetObjectIdentifier();
+            Note.CreatedDateUtc = DateTimeOffset.UtcNow;
+            Note.ModifiedDateUtc = null;
+
+            await _noteTagService.ApplyGeneratedTagsAsync(Note);
+            Context.Notes.Add(Note);
+            await Context.SaveChangesAsync();
 
             return RedirectToPage("./Index");
         }

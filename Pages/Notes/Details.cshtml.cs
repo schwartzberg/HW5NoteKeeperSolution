@@ -1,23 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using HW5NoteKeeperSolution.Data;
 using HW5NoteKeeperSolution.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HW5NoteKeeperSolution.Pages.Notes
 {
-    public class DetailsModel : PageModel
+    public class DetailsModel : NoteKeeperBasePageModel
     {
-        private readonly HW5NoteKeeperSolution.Data.NoteKeeperContext _context;
-
-        public DetailsModel(HW5NoteKeeperSolution.Data.NoteKeeperContext context)
-        {
-            _context = context;
-        }
+        public DetailsModel(NoteKeeperContext context) : base(context) { }
 
         public Note Note { get; set; } = default!;
 
@@ -28,16 +18,17 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 return NotFound();
             }
 
-            var note = await _context.Notes.FirstOrDefaultAsync(m => m.Id == id);
+            var note = await Context.Notes
+                .Include(n => n.Tags)
+                .FirstOrDefaultAsync(n => n.Id == id && n.UserRealmId == User.GetObjectIdentifier());
 
-            if (note is not null)
+            if (note == null)
             {
-                Note = note;
-
-                return Page();
+                return NotFound();
             }
 
-            return NotFound();
+            Note = note;
+            return Page();
         }
     }
 }

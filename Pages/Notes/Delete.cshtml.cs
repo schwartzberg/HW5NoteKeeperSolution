@@ -1,23 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using HW5NoteKeeperSolution.Data;
 using HW5NoteKeeperSolution.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HW5NoteKeeperSolution.Pages.Notes
 {
-    public class DeleteModel : PageModel
+    public class DeleteModel : NoteKeeperBasePageModel
     {
-        private readonly HW5NoteKeeperSolution.Data.NoteKeeperContext _context;
-
-        public DeleteModel(HW5NoteKeeperSolution.Data.NoteKeeperContext context)
-        {
-            _context = context;
-        }
+        public DeleteModel(NoteKeeperContext context) : base(context) { }
 
         [BindProperty]
         public Note Note { get; set; } = default!;
@@ -29,16 +19,17 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 return NotFound();
             }
 
-            var note = await _context.Notes.FirstOrDefaultAsync(m => m.Id == id);
+            var note = await Context.Notes
+                .Include(n => n.Tags)
+                .FirstOrDefaultAsync(n => n.Id == id && n.UserRealmId == User.GetObjectIdentifier());
 
-            if (note is not null)
+            if (note == null)
             {
-                Note = note;
-
-                return Page();
+                return NotFound();
             }
 
-            return NotFound();
+            Note = note;
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(Guid? id)
@@ -48,12 +39,15 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 return NotFound();
             }
 
-            var note = await _context.Notes.FindAsync(id);
+            // Only delete if the note belongs to the current user (tags cascade via EF).
+            var note = await Context.Notes
+                .Include(n => n.Tags)
+                .FirstOrDefaultAsync(n => n.Id == id && n.UserRealmId == User.GetObjectIdentifier());
+
             if (note != null)
             {
-                Note = note;
-                _context.Notes.Remove(Note);
-                await _context.SaveChangesAsync();
+                Context.Notes.Remove(note);
+                await Context.SaveChangesAsync();
             }
 
             return RedirectToPage("./Index");

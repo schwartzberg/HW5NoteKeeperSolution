@@ -36,10 +36,22 @@
             @Html.DisplayFor(model => model.Note.ModifiedDateUtc)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Note.UserRealmId)
+            Tags
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Note.UserRealmId)
+            @if (Model.Note.Tags != null && Model.Note.Tags.Any())
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var tag in Model.Note.Tags)
+                    {
+                        <li><span class="badge bg-secondary">@tag.Name</span></li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <span class="text-muted">No tags</span>
+            }
         </dd>
     </dl>
 </div>
