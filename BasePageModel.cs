@@ -10,9 +10,9 @@ namespace HW5NoteKeeperSolution.Pages
     public class BasePageModel : PageModel
     {
         /// <summary>
-        /// Update the view data with the app version
+        /// Updates <c>ViewData["AppVersion"]</c> with the assembly version before each page handler executes.
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">The page handler executing context provided by the Razor Pages framework.</param>
         public override void OnPageHandlerExecuting(PageHandlerExecutingContext context)
         {
             base.OnPageHandlerExecuting(context);
@@ -20,9 +20,9 @@ namespace HW5NoteKeeperSolution.Pages
         }
 
         /// <summary>
-        /// Get the app version from the assembly
+        /// Gets the application version from the executing assembly's informational version attribute.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The semantic version string (without the build metadata suffix), or <c>"Unknown"</c> if unavailable.</returns>
         public static string GetAppVersion()
         {
             Assembly assembly = Assembly.GetExecutingAssembly();

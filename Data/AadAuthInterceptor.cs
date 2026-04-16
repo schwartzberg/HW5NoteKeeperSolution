@@ -17,6 +17,9 @@ public class AadAuthInterceptor : DbConnectionInterceptor
 
     private readonly DefaultAzureCredential _credential;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="AadAuthInterceptor"/>.
+    /// </summary>
     /// <param name="credential">The Azure credential used to acquire database tokens.</param>
     public AadAuthInterceptor(DefaultAzureCredential credential)
     {

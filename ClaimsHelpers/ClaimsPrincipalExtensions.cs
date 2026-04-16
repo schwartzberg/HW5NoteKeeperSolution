@@ -21,10 +21,10 @@ namespace HW5NoteKeeperSolution
         }
 
         /// <summary>
-        /// Retrieves a human readable display name of the user
+        /// Retrieves a human readable display name of the user.
         /// </summary>
-        /// <param name="claimsPrincipal"></param>
-        /// <returns>A human readable display name of the user</returns>
+        /// <param name="claimsPrincipal">The claims principal to inspect.</param>
+        /// <returns>A human readable display name of the user.</returns>
         public static string GetDisplayName(this ClaimsPrincipal claimsPrincipal)
         {
             string returnedValue = claimsPrincipal.FindFirst(AzureADClaimTypes.Name)?.Value ?? string.Empty;
@@ -35,7 +35,7 @@ namespace HW5NoteKeeperSolution
         /// <summary>
         /// Retrieves the email address of the user.
         /// </summary>
-        /// <param name="claimsPrincipal"></param>
+        /// <param name="claimsPrincipal">The claims principal to inspect.</param>
         /// <returns>The email address of the user.</returns>
         public static string GetEmailAddress(this ClaimsPrincipal claimsPrincipal)
         {
@@ -51,7 +51,7 @@ namespace HW5NoteKeeperSolution
         /// <summary>
         /// Retrieves the preferred username for the user.
         /// </summary>
-        /// <param name="claimsPrincipal"></param>
+        /// <param name="claimsPrincipal">The claims principal to inspect.</param>
         /// <returns>The preferred username.</returns>
         public static string GetUserPrincipalName(this ClaimsPrincipal claimsPrincipal)
         {
@@ -59,10 +59,10 @@ namespace HW5NoteKeeperSolution
         }
 
         /// <summary>
-        /// Retrieves the tenant ID
+        /// Retrieves the tenant ID.
         /// </summary>
-        /// <param name="claimsPrincipal"></param>
-        /// <returns>The tenant ID</returns>
+        /// <param name="claimsPrincipal">The claims principal to inspect.</param>
+        /// <returns>The tenant ID.</returns>
         public static string GetTenantId(this ClaimsPrincipal claimsPrincipal)
         {
             return claimsPrincipal.FindFirst(AzureADClaimTypes.TenantId)?.Value ?? string.Empty;
