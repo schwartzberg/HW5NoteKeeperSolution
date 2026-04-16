@@ -26,7 +26,6 @@ namespace HW5NoteKeeper.Tests
         private readonly Mock<INoteTagService> _tagServiceMock;
         private readonly Mock<IUserNoteSeedService> _seedServiceMock;
         private readonly Mock<IAzureStorageService> _storageServiceMock;
-        private readonly Settings.NoteLimits _noteLimits;
 
         private const string UserId = "user-oid-abc";
         private const string OtherUserId = "user-oid-xyz";
@@ -41,7 +40,6 @@ namespace HW5NoteKeeper.Tests
             _tagServiceMock = new Mock<INoteTagService>();
             _seedServiceMock = new Mock<IUserNoteSeedService>();
             _storageServiceMock = new Mock<IAzureStorageService>();
-            _noteLimits = new Settings.NoteLimits();
 
             _tagServiceMock
                 .Setup(s => s.ApplyGeneratedTags(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -107,7 +105,7 @@ namespace HW5NoteKeeper.Tests
             SeedNote(UserId, "My Note");
             SeedNote(OtherUserId, "Other Note");
 
-            var model = new IndexModel(_context, _seedServiceMock.Object);
+            var model = new IndexModel(_context, _seedServiceMock.Object, _storageServiceMock.Object, new LoggerFactory().CreateLogger<IndexModel>());
             SetUser(model, MakePrincipal(UserId));
 
             await model.OnGetAsync();
@@ -122,7 +120,7 @@ namespace HW5NoteKeeper.Tests
             SeedNote(OtherUserId, "Other Note 1");
             SeedNote(OtherUserId, "Other Note 2");
 
-            var model = new IndexModel(_context, _seedServiceMock.Object);
+            var model = new IndexModel(_context, _seedServiceMock.Object, _storageServiceMock.Object, new LoggerFactory().CreateLogger<IndexModel>());
             SetUser(model, MakePrincipal(UserId));
 
             await model.OnGetAsync();
@@ -206,7 +204,7 @@ namespace HW5NoteKeeper.Tests
         // ── DetailsModel ─────────────────────────────────────────────────────────
 
         private DetailsModel MakeDetailsModel() =>
-            new DetailsModel(_context, _storageServiceMock.Object, _noteLimits,
+            new DetailsModel(_context, _storageServiceMock.Object,
                 new Mock<ILogger<DetailsModel>>().Object);
 
         [Fact]

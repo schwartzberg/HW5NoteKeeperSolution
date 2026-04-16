@@ -1,7 +1,6 @@
 using HW5NoteKeeper.Data;
 using HW5NoteKeeper.Models;
 using HW5NoteKeeper.Services;
-using HW5NoteKeeper.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +15,6 @@ namespace HW5NoteKeeper.Pages.Notes
     public class DetailsModel : NoteKeeperBasePageModel
     {
         private readonly IAzureStorageService _storageService;
-        private readonly NoteLimits _noteLimits;
         private readonly ILogger<DetailsModel> _logger;
 
         /// <summary>
@@ -24,16 +22,13 @@ namespace HW5NoteKeeper.Pages.Notes
         /// </summary>
         /// <param name="context">The EF Core database context.</param>
         /// <param name="storageService">The Azure Blob Storage service for attachment operations.</param>
-        /// <param name="noteLimits">Application-level limits (e.g., max attachments per note).</param>
         /// <param name="logger">Logger for informational and error messages.</param>
         public DetailsModel(
             NoteKeeperContext context,
             IAzureStorageService storageService,
-            NoteLimits noteLimits,
             ILogger<DetailsModel> logger) : base(context)
         {
             _storageService = storageService;
-            _noteLimits = noteLimits;
             _logger = logger;
         }
 
@@ -96,15 +91,6 @@ namespace HW5NoteKeeper.Pages.Notes
             if (file == null || file.Length == 0)
             {
                 StatusMessage = "Please select a file to upload.";
-                Attachments = await _storageService.ListAttachmentsAsync(note.Id.ToString());
-                return Page();
-            }
-
-            // Enforce attachment limit
-            int currentCount = await _storageService.GetBlobCountAsync(note.Id.ToString());
-            if (currentCount >= _noteLimits.MaxAttachments)
-            {
-                StatusMessage = $"Maximum of {_noteLimits.MaxAttachments} attachments per note has been reached.";
                 Attachments = await _storageService.ListAttachmentsAsync(note.Id.ToString());
                 return Page();
             }

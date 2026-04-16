@@ -71,6 +71,55 @@ namespace HW5NoteKeeper.Tests
                 because: "an authenticated user must be able to reach the Notes index (requirement 3.1)");
         }
 
+        /// <summary>
+        /// Verifies that an authenticated user accessing all major protected pages gets 200 OK
+        /// (not redirected to sign-in). This guards against silent authentication failures such
+        /// as missing client secrets or misconfigured OIDC callback paths that would cause the
+        /// app to drop the user back to the unauthenticated welcome page.
+        /// </summary>
+        [Theory]
+        [InlineData("/Notes")]
+        [InlineData("/Notes/Index")]
+        [InlineData("/Notes/Create")]
+        [InlineData("/Privacy")]
+        public async Task AuthenticatedUser_ProtectedPages_ReturnsOkNotRedirect(string path)
+        {
+            using var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+            });
+            client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, "auth-redirect-test-user");
+
+            var response = await client.GetAsync(path);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK,
+                because: $"an authenticated user hitting {path} must get 200 OK, " +
+                         "not be redirected back to sign-in (which would indicate a broken auth callback)");
+        }
+
+        /// <summary>
+        /// Verifies that when an authenticated user accesses the root welcome page,
+        /// they are redirected to the Notes list (not shown the unauthenticated welcome
+        /// page with "Sign in"). This proves the auth session was properly established.
+        /// </summary>
+        [Fact]
+        public async Task AuthenticatedUser_WelcomePage_RedirectsToNotes()
+        {
+            using var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+            });
+            client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, "welcome-page-test-user");
+
+            var response = await client.GetAsync("/");
+
+            response.StatusCode.Should().Be(HttpStatusCode.Found,
+                because: "an authenticated user on the welcome page should be redirected to Notes, " +
+                         "not shown the Sign-in page (which would indicate a broken auth callback)");
+            response.Headers.Location!.ToString().Should().Contain("/Notes",
+                because: "the redirect should go to the Notes list page");
+        }
+
         // ── Error page anonymous access ──────────────────────────────────────────
 
         /// <summary>

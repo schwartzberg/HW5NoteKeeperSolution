@@ -10,13 +10,22 @@
 <p>
     <a asp-page="Create">Create New</a>
 </p>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <table class="table">
     <thead>
         <tr>
             <th>
                 @Html.DisplayNameFor(model => model.Note[0].Summary)
             </th>
-            <th>
+            <th style="width:18%;">
                 @Html.DisplayNameFor(model => model.Note[0].Details)
             </th>
             <th>
@@ -26,7 +35,8 @@
                 @Html.DisplayNameFor(model => model.Note[0].ModifiedDateUtc)
             </th>
             <th>Tags</th>
-            <th></th>
+            <th style="width:25%;">Attachments</th>
+            <th>Note Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -48,6 +58,37 @@
                 @if (item.Tags != null)
                 {
                     @string.Join(", ", item.Tags.Select(t => t.Name))
+                }
+            </td>
+            <td>
+                <form method="post" asp-page-handler="Upload" asp-route-id="@item.Id" enctype="multipart/form-data" class="mb-1">
+                    <div class="d-flex align-items-center gap-1">
+                        <input type="file" name="file" class="form-control form-control-sm" style="max-width:180px;" />
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Upload</button>
+                    </div>
+                </form>
+                @{
+                    var attachments = Model.AttachmentsByNote.GetValueOrDefault(item.Id) ?? new List<HW5NoteKeeper.Services.AttachmentInfo>();
+                }
+                @if (attachments.Any())
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var att in attachments)
+                        {
+                            <li>
+                                <a asp-page="./Index"
+                                   asp-page-handler="Download"
+                                   asp-route-id="@item.Id"
+                                   asp-route-attachmentId="@att.BlobName">@att.OriginalFileName</a>
+                                <form method="post" asp-page-handler="DeleteAttachment"
+                                      asp-route-id="@item.Id"
+                                      asp-route-attachmentId="@att.BlobName"
+                                      style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0 ms-1">Delete</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
                 }
             </td>
             <td>

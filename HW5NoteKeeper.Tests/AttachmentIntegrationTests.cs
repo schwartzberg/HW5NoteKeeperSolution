@@ -190,12 +190,12 @@ namespace HW5NoteKeeper.Tests
         }
 
         [Fact]
-        public async Task Upload_UpToMaxAttachments_AllSucceed()
+        public async Task Upload_MultipleAttachments_AllSucceed()
         {
-            var note = await _factory.SeedNoteAsync(UserId, summary: "Max limit test");
+            var note = await _factory.SeedNoteAsync(UserId, summary: "Multi upload test");
             using var client = CreateClient();
 
-            // Upload 3 (the maximum)
+            // Upload 3 files
             string[] files = { "Chocolate.png", "Diamonds.png", "NewCar.png" };
             foreach (var file in files)
             {
@@ -239,32 +239,6 @@ namespace HW5NoteKeeper.Tests
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var html = await response.Content.ReadAsStringAsync();
             html.Should().Contain("Please select a file");
-        }
-
-        [Fact]
-        public async Task Upload_ExceedsMaxAttachments_ReturnsPageWithLimitMessage()
-        {
-            var note = await _factory.SeedNoteAsync(UserId, summary: "Exceed limit test");
-            using var client = CreateClient();
-
-            // Fill to the limit (3)
-            for (int i = 1; i <= 3; i++)
-            {
-                var (_, t) = await GetWithCsrfAsync(client, $"/Notes/Details?id={note.Id}");
-                var f = BuildUploadForm(t!, $"file{i}.png");
-                await client.PostAsync($"/Notes/Details?id={note.Id}&handler=Upload", f);
-            }
-
-            // Fourth upload should be rejected
-            var (_, token) = await GetWithCsrfAsync(client, $"/Notes/Details?id={note.Id}");
-            var form = BuildUploadForm(token!, "extra.png");
-            var response = await client.PostAsync(
-                $"/Notes/Details?id={note.Id}&handler=Upload", form);
-
-            // The handler returns Page() (200), not redirect, when limit is hit
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var html = await response.Content.ReadAsStringAsync();
-            html.Should().Contain("Maximum of");
         }
 
         [Fact]
@@ -466,6 +440,220 @@ namespace HW5NoteKeeper.Tests
             var reDownload = await client.GetAsync(
                 $"/Notes/Details?id={note.Id}&handler=Download&attachmentId={blobName}");
             reDownload.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        #endregion
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Index Page – Attachment Tests
+        // ─────────────────────────────────────────────────────────────────────
+
+        #region Index Page Attachments
+
+        /// <summary>
+        /// Uploads a file via the Index page handler.
+        /// Returns the redirect response (does NOT follow it).
+        /// </summary>
+        private async Task<HttpResponseMessage> UploadViaIndexAsync(
+            HttpClient client, Guid noteId, string fileName,
+            string contentType = "image/png", int sizeBytes = 128)
+        {
+            var (_, token) = await GetWithCsrfAsync(client, "/Notes");
+            var form = BuildUploadForm(token!, fileName, contentType, sizeBytes);
+            return await client.PostAsync(
+                $"/Notes?id={noteId}&handler=Upload", form);
+        }
+
+        [Fact]
+        public async Task IndexPage_Shows_Attachments_Column_Header()
+        {
+            await _factory.SeedNoteAsync(UserId, summary: "Index col test");
+            using var client = CreateClient();
+
+            var response = await client.GetAsync("/Notes");
+            var html = await response.Content.ReadAsStringAsync();
+
+            html.Should().Contain("Attachments");
+        }
+
+        [Fact]
+        public async Task IndexPage_Upload_Attachment_Redirects_And_ShowsFile()
+        {
+            var note = await _factory.SeedNoteAsync(UserId, summary: "Index upload test");
+            using var client = CreateClient();
+
+            var uploadResponse = await UploadViaIndexAsync(client, note.Id, "index-file.txt");
+            uploadResponse.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+            // Follow redirect with same client (TempData needs the cookie)
+            var indexResponse = await client.GetAsync(uploadResponse.Headers.Location);
+            var html = await indexResponse.Content.ReadAsStringAsync();
+
+            html.Should().Contain("index-file.txt");
+            html.Should().Contain("uploaded successfully");
+        }
+
+        [Fact]
+        public async Task IndexPage_Download_Attachment_ReturnsFile()
+        {
+            var note = await _factory.SeedNoteAsync(UserId, summary: "Index download test");
+            using var client = CreateClient();
+
+            // Upload first
+            await UploadViaIndexAsync(client, note.Id, "download-me.pdf", "application/pdf", 256);
+
+            // Get the Index page and find the download link
+            var indexResponse = await client.GetAsync("/Notes");
+            var html = await indexResponse.Content.ReadAsStringAsync();
+
+            var downloadMatch = Regex.Match(html,
+                @"handler=Download[^""]*id=" + note.Id + @"[^""]*attachmentId=([a-f0-9\-]+)",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+            if (!downloadMatch.Success)
+            {
+                downloadMatch = Regex.Match(html,
+                    @"attachmentId=([a-f0-9\-]+)[^""]*handler=Download",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            }
+
+            downloadMatch.Success.Should().BeTrue("download link should exist on Index page");
+            var blobName = downloadMatch.Groups[1].Value;
+
+            // Download
+            var downloadResponse = await client.GetAsync(
+                $"/Notes?id={note.Id}&handler=Download&attachmentId={blobName}");
+            downloadResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            downloadResponse.Content.Headers.ContentDisposition!.FileName.Should().Contain("download-me.pdf");
+        }
+
+        [Fact]
+        public async Task IndexPage_Delete_Attachment_RemovesIt()
+        {
+            var note = await _factory.SeedNoteAsync(UserId, summary: "Index delete test");
+            using var client = CreateClient();
+
+            // Upload
+            await UploadViaIndexAsync(client, note.Id, "to-delete.txt", "text/plain");
+
+            // Get page to find the blob name via the delete form
+            var indexHtml = await (await client.GetAsync("/Notes")).Content.ReadAsStringAsync();
+
+            var blobMatch = Regex.Match(indexHtml,
+                @"attachmentId=([a-f0-9\-]+)[^""]*handler=DeleteAttachment",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+            if (!blobMatch.Success)
+            {
+                blobMatch = Regex.Match(indexHtml,
+                    @"handler=DeleteAttachment[^""]*attachmentId=([a-f0-9\-]+)",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            }
+
+            blobMatch.Success.Should().BeTrue("delete form should exist on Index page");
+            var blobName = blobMatch.Groups[1].Value;
+
+            // Delete
+            var (_, token) = await GetWithCsrfAsync(client, "/Notes");
+            var deleteForm = BuildDeleteForm(token!);
+            var deleteResponse = await client.PostAsync(
+                $"/Notes?id={note.Id}&handler=DeleteAttachment&attachmentId={blobName}", deleteForm);
+            deleteResponse.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+            // Verify it's gone
+            var afterResponse = await client.GetAsync("/Notes");
+            var afterHtml = await afterResponse.Content.ReadAsStringAsync();
+            afterHtml.Should().Contain("deleted successfully");
+            afterHtml.Should().NotContain("to-delete.txt");
+        }
+
+        [Fact]
+        public async Task IndexPage_Upload_NoFile_ShowsError()
+        {
+            var note = await _factory.SeedNoteAsync(UserId, summary: "No file test");
+            using var client = CreateClient();
+
+            // POST with no file content
+            var (_, token) = await GetWithCsrfAsync(client, "/Notes");
+            var emptyForm = new MultipartFormDataContent();
+            emptyForm.Add(new StringContent(token!), "__RequestVerificationToken");
+
+            var response = await client.PostAsync(
+                $"/Notes?id={note.Id}&handler=Upload", emptyForm);
+            response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+            // Follow redirect with same client to see TempData message
+            var indexResponse = await client.GetAsync(response.Headers.Location);
+            var html = await indexResponse.Content.ReadAsStringAsync();
+
+            html.Should().Contain("select a file");
+        }
+
+        [Fact]
+        public async Task IndexPage_OtherUser_Cannot_Upload_Attachment()
+        {
+            var note = await _factory.SeedNoteAsync(UserId, summary: "Other user upload test");
+            using var otherClient = CreateClient(OtherUserId);
+
+            // Get CSRF token from Create page (other user's Index has no forms)
+            var (_, token) = await GetWithCsrfAsync(otherClient, "/Notes/Create");
+            token.Should().NotBeNull();
+            var form = BuildUploadForm(token!, "hack.txt");
+            var uploadResponse = await otherClient.PostAsync(
+                $"/Notes?id={note.Id}&handler=Upload", form);
+
+            // Should be NotFound (ownership check fails)
+            uploadResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task IndexPage_OtherUser_Cannot_Download_Attachment()
+        {
+            var note = await _factory.SeedNoteAsync(UserId, summary: "Other user download test");
+            using var ownerClient = CreateClient();
+
+            // Owner uploads
+            await UploadViaIndexAsync(ownerClient, note.Id, "secret.txt");
+
+            // Get blob name
+            var html = await (await ownerClient.GetAsync("/Notes")).Content.ReadAsStringAsync();
+            var blobMatch = Regex.Match(html,
+                @"attachmentId=([a-f0-9\-]+)",
+                RegexOptions.IgnoreCase);
+            blobMatch.Success.Should().BeTrue();
+            var blobName = blobMatch.Groups[1].Value;
+
+            // Other user tries to download
+            using var otherClient = CreateClient(OtherUserId);
+            var response = await otherClient.GetAsync(
+                $"/Notes?id={note.Id}&handler=Download&attachmentId={blobName}");
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task IndexPage_OtherUser_Cannot_Delete_Attachment()
+        {
+            var note = await _factory.SeedNoteAsync(UserId, summary: "Other user delete test");
+            using var ownerClient = CreateClient();
+
+            // Owner uploads
+            await UploadViaIndexAsync(ownerClient, note.Id, "protected.txt");
+
+            // Get blob name
+            var html = await (await ownerClient.GetAsync("/Notes")).Content.ReadAsStringAsync();
+            var blobMatch = Regex.Match(html,
+                @"attachmentId=([a-f0-9\-]+)",
+                RegexOptions.IgnoreCase);
+            blobMatch.Success.Should().BeTrue();
+            var blobName = blobMatch.Groups[1].Value;
+
+            // Other user tries to delete — get CSRF from Create page
+            using var otherClient = CreateClient(OtherUserId);
+            var (_, token) = await GetWithCsrfAsync(otherClient, "/Notes/Create");
+            var deleteForm = BuildDeleteForm(token!);
+            var response = await otherClient.PostAsync(
+                $"/Notes?id={note.Id}&handler=DeleteAttachment&attachmentId={blobName}", deleteForm);
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         #endregion
