@@ -6,18 +6,23 @@ namespace HW5NoteKeeperSolution.Services
     /// Orchestrates AI tag generation and attaches the resulting tags to a <see cref="Note"/>.
     /// Normalizes tags to lowercase, trims whitespace, de-duplicates, and enforces a maximum
     /// length of 30 characters and a maximum count of 5 tags per note.
+    /// If the AI tag generator is unavailable (e.g. invalid API key), the failure is logged
+    /// and the note is left without generated tags so that the save can still succeed.
     /// </summary>
     public class NoteTagService : INoteTagService
     {
         private readonly ITagGeneratorService _tagGeneratorService;
+        private readonly ILogger<NoteTagService> _logger;
 
         /// <summary>
         /// Initializes a new instance of <see cref="NoteTagService"/>.
         /// </summary>
         /// <param name="tagGeneratorService">The AI service used to generate raw keyword tags from note details.</param>
-        public NoteTagService(ITagGeneratorService tagGeneratorService)
+        /// <param name="logger">Logger for tag generation diagnostics and failure warnings.</param>
+        public NoteTagService(ITagGeneratorService tagGeneratorService, ILogger<NoteTagService> logger)
         {
             _tagGeneratorService = tagGeneratorService;
+            _logger = logger;
         }
 
         /// <inheritdoc/>
@@ -30,7 +35,19 @@ namespace HW5NoteKeeperSolution.Services
                 note.Id = Guid.NewGuid();
             }
 
-            KeyTagsResponse response = await _tagGeneratorService.GenerateTagsAsync(note.Details, cancellationToken);
+            KeyTagsResponse? response;
+            try
+            {
+                response = await _tagGeneratorService.GenerateTagsAsync(note.Details, cancellationToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogWarning(ex,
+                    "AI tag generation failed for note {NoteId}. " +
+                    "The note will be saved without generated tags.",
+                    note.Id);
+                return;
+            }
 
             IEnumerable<string> normalizedTags = response.Tags
                 .Where(tag => !string.IsNullOrWhiteSpace(tag))
@@ -65,7 +82,10 @@ namespace HW5NoteKeeperSolution.Services
 
             if (note.Tags.Count == 0)
             {
-                throw new InvalidOperationException("At least one generated tag is required when saving a note.");
+                _logger.LogWarning(
+                    "AI tag generation returned no usable tags for note {NoteId}. " +
+                    "The note will be saved without tags.",
+                    note.Id);
             }
         }
     }

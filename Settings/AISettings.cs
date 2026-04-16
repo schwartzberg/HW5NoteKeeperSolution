@@ -7,7 +7,7 @@ namespace HW5NoteKeeperSolution.Settings
     public class AISettings
     {
         /// <summary>Gets or sets the full URI of the Azure OpenAI deployment endpoint.</summary>
-        public string DeploymentUri { get; set; } = string.Empty;
+        public string DeploymentUri { get; set; } = "https://ai-csscie94-foundry.openai.azure.com/";
 
         /// <summary>Gets or sets an optional API key. When <see langword="null"/> or empty, <c>DefaultAzureCredential</c> is used instead.</summary>
         public string? ApiKey { get; set; }

@@ -39,9 +39,13 @@ namespace HW5NoteKeeperSolution
         /// <returns>The email address of the user.</returns>
         public static string GetEmailAddress(this ClaimsPrincipal claimsPrincipal)
         {
-            string returnedValue = claimsPrincipal.FindFirst(AzureADClaimTypes.EmailAddress)?.Value ?? string.Empty;
-
-            return returnedValue;
+            // Check long-form (mapped) and short-form (unmapped) claim types
+            // because MapInboundClaims = false keeps the original OIDC token names.
+            return claimsPrincipal.FindFirst(AzureADClaimTypes.EmailAddress)?.Value
+                ?? claimsPrincipal.FindFirst("email")?.Value
+                ?? claimsPrincipal.FindFirst("emails")?.Value
+                ?? claimsPrincipal.FindFirst("preferred_username")?.Value
+                ?? string.Empty;
         }
 
         /// <summary>

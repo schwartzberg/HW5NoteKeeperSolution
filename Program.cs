@@ -4,7 +4,6 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
 using HW5NoteKeeperSolution.Data;
-using HW5NoteKeeperSolution.Middleware;
 using HW5NoteKeeperSolution.Services;
 using HW5NoteKeeperSolution.Settings;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -14,6 +13,7 @@ using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using System.Security.Claims;
+using Microsoft.Data.SqlClient;
 using MSFTBuilder = Microsoft.AspNetCore.Builder;
 
 namespace HW5NoteKeeperSolution
@@ -48,9 +48,22 @@ namespace HW5NoteKeeperSolution
             string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
               ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not found and is required.");
 
-            builder.Services.AddDbContext<NoteKeeperContext>(options =>
+            // Strip authentication-related properties from the connection string.
+            // We handle Azure AD token acquisition via our own AadAuthInterceptor using a
+            // DefaultAzureCredential that excludes InteractiveBrowserCredential, preventing
+            // the "Pick an account" popup from ever appearing.
+            var csBuilder = new SqlConnectionStringBuilder(connectionString);
+            csBuilder.Remove("Authentication");
+            csBuilder.Remove("User ID");
+            csBuilder.Remove("UID");
+            csBuilder.Remove("Password");
+            csBuilder.Remove("PWD");
+            connectionString = csBuilder.ToString();
+
+            builder.Services.AddDbContext<NoteKeeperContext>((sp, options) =>
             {
                 options.UseSqlServer(connectionString);
+                options.AddInterceptors(new AadAuthInterceptor(sp.GetRequiredService<DefaultAzureCredential>()));
             });
 
             builder.Services.PostConfigure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
@@ -62,7 +75,50 @@ namespace HW5NoteKeeperSolution
                 // The OIDC middleware calls this URI once the signout callback from Entra completes.
                 options.SignedOutRedirectUri = "/";
 
+                // Skip "Pick an account" — always go straight to the login/signup form.
+                options.Prompt = "login";
+
                 options.Events ??= new OpenIdConnectEvents();
+
+                // Capture any handler already registered by Microsoft.Identity.Web
+                // (e.g., for the Forgot-Password B2C policy redirect) so we can chain it.
+                var existingOnRemoteFailure = options.Events.OnRemoteFailure;
+                options.Events.OnRemoteFailure = async context =>
+                {
+                    // Let Microsoft.Identity.Web's own handler run first (if any).
+                    if (existingOnRemoteFailure != null)
+                        await existingOnRemoteFailure(context);
+
+                    // If the failure has not already been handled (e.g., by a B2C policy
+                    // redirect), redirect the user gracefully back to the welcome page.
+                    // This covers cases such as a non-tenant account attempting to sign in.
+                    if (context.Result?.Handled != true)
+                    {
+                        var failureLogger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILogger<Program>>();
+                        failureLogger.LogWarningWithCallerInfo(
+                            $"OIDC remote failure: {context.Failure?.Message}. " +
+                            "Redirecting to welcome page.");
+                        context.HandleResponse();
+                        context.Response.Redirect("/");
+                    }
+                };
+
+                // Pass logout_hint so Entra signs out directly without "Pick an account"
+                var existingOnSignOut = options.Events.OnRedirectToIdentityProviderForSignOut;
+                options.Events.OnRedirectToIdentityProviderForSignOut = async context =>
+                {
+                    if (existingOnSignOut != null)
+                        await existingOnSignOut(context);
+
+                    var hint = context.HttpContext.User.FindFirst("login_hint")?.Value
+                        ?? context.HttpContext.User.FindFirst("preferred_username")?.Value
+                        ?? context.HttpContext.User.FindFirst("email")?.Value;
+
+                    if (!string.IsNullOrEmpty(hint))
+                        context.ProtocolMessage.SetParameter("logout_hint", hint);
+                };
+
                 options.Events.OnTokenValidated = context =>
                 {
                     var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
@@ -139,24 +195,25 @@ namespace HW5NoteKeeperSolution
             });
 
             builder.Services.AddSingleton<IAzureStorageInitializer, AzureStorageInitializer>();
-            builder.Services.AddScoped<IDatabaseSchemaInitializer, DatabaseSchemaInitializer>();
             builder.Services.AddScoped<ITagGeneratorService, TagGeneratorService>();
             builder.Services.AddScoped<INoteTagService, NoteTagService>();
             builder.Services.AddScoped<IUserNoteSeedService, UserNoteSeedService>();
 
             builder.Services.AddRazorPages(options =>
             {
+                // Require authentication for the app by default. Individual pages that should stay
+                // public must be opted out explicitly below.
+                options.Conventions.AuthorizeFolder("/");
+
+                // Keep the landing page public so anonymous users can reach the app before choosing
+                // to sign in. The error page is also public so failures can be rendered cleanly
+                // without triggering an auth challenge redirect loop.
                 options.Conventions.AllowAnonymousToPage("/Index");
+                options.Conventions.AllowAnonymousToPage("/Error");
             })
             .AddMicrosoftIdentityUI();
 
             var app = builder.Build();
-
-            using (var scope = app.Services.CreateScope())
-            {
-                var schemaInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseSchemaInitializer>();
-                await schemaInitializer.InitializeAsync();
-            }
 
             if (!app.Environment.IsDevelopment())
             {
@@ -167,7 +224,6 @@ namespace HW5NoteKeeperSolution
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthentication();
-            app.UseMiddleware<FirstLoginSeedingMiddleware>();
             app.UseAuthorization();
 
             app.MapStaticAssets().AllowAnonymous();
@@ -183,7 +239,8 @@ namespace HW5NoteKeeperSolution
             {
                 SharedTokenCacheTenantId = tenantId,
                 VisualStudioCodeTenantId = tenantId,
-                VisualStudioTenantId = tenantId
+                VisualStudioTenantId = tenantId,
+                ExcludeInteractiveBrowserCredential = true
             };
 
             if (environment.IsDevelopment())

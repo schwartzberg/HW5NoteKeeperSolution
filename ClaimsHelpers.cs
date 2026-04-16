@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using System.Security.Principal;
-using Microsoft.Identity.Web;
 
 namespace HW5NoteKeeperSolution;
 
@@ -37,18 +36,12 @@ public static class ClaimsHelpers
             return null;
         }
 
-        string? firstName = claimsIdentity.FindFirst(ClaimTypes.GivenName)?.Value;
-        string? lastName = claimsIdentity.FindFirst(ClaimTypes.Surname)?.Value;
-
-        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-        var objId = claimsPrincipal.GetObjectIdentifier();
-        var objId1= claimsPrincipal.ObjectIdentifier();
-        var objId2 = claimsPrincipal.GetDisplayName();
-        var objId3 = claimsPrincipal.GetUserPrincipalName();
-
-        //use this to differentiate between logged in users 
-        string? objectIdentifier = claimsIdentity.FindFirst(ClaimConstants.ObjectId)?.Value;
-       
+        // Check both long-form (mapped) and short-form (unmapped) claim types
+        // because MapInboundClaims = false keeps the original OIDC token names.
+        string? firstName = claimsIdentity.FindFirst( ClaimTypes.GivenName)?.Value
+            ?? claimsIdentity.FindFirst("given_name")?.Value;
+        string? lastName = claimsIdentity.FindFirst(ClaimTypes.Surname)?.Value
+            ?? claimsIdentity.FindFirst("family_name")?.Value;
 
         if (firstName == null && lastName == null)
         {

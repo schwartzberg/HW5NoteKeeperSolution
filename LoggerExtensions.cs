@@ -29,6 +29,22 @@ namespace HW5NoteKeeperSolution
         }
 
         /// <summary>
+        /// Writes a warning log message and attaches caller information automatically.
+        /// </summary>
+        /// <param name="logger">The logger that writes the message.</param>
+        /// <param name="message">The human-readable message to log.</param>
+        /// <param name="caller">The member name provided by the compiler.</param>
+        /// <param name="file">The source file path provided by the compiler.</param>
+        /// <param name="lineNumber">The source line number provided by the compiler.</param>
+        public static void LogWarningWithCallerInfo(this ILogger logger, string message,
+            [CallerMemberName] string caller = "",
+            [CallerFilePath] string file = "",
+            [CallerLineNumber] int lineNumber = 0)
+        {
+            logger.LogWarning("{File}:{Line} [{Caller}] - {Message}", file, lineNumber, caller, message);
+        }
+
+        /// <summary>
         /// Writes an error log message and attaches caller information automatically.
         /// </summary>
         /// <param name="logger">The logger that writes the message.</param>

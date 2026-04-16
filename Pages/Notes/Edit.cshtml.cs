@@ -85,20 +85,32 @@ namespace HW5NoteKeeperSolution.Pages.Notes
 
             bool detailsChanged = !string.Equals(existingNote.Details, Note.Details, StringComparison.Ordinal);
 
+            if (detailsChanged)
+            {
+                // Save tag deletion separately so the DELETE batch does not
+                // conflict with the subsequent note UPDATE + tag INSERT batch.
+                existingNote.Tags.Clear();
+                await Context.SaveChangesAsync();
+
+                // Clear the change tracker and reload so the second save starts
+                // with a clean entity state — avoids DbUpdateConcurrencyException.
+                Context.ChangeTracker.Clear();
+                existingNote = await Context.Notes
+                    .Include(n => n.Tags)
+                    .FirstOrDefaultAsync(n => n.Id == Note.Id && n.UserRealmId == User.GetObjectIdentifier());
+
+                if (existingNote == null)
+                {
+                    return NotFound();
+                }
+            }
+
             existingNote.Summary = Note.Summary;
             existingNote.Details = Note.Details;
             existingNote.ModifiedDateUtc = DateTimeOffset.UtcNow;
-
+             
             if (detailsChanged)
             {
-                // Explicitly remove old tags via DbContext before regenerating,
-                // then call the service to generate and attach new tags.
-                var tagsToRemove = existingNote.Tags.ToList();
-                if (tagsToRemove.Any())
-                {
-                    Context.Tags.RemoveRange(tagsToRemove);
-                    existingNote.Tags.Clear();
-                }
                 await _noteTagService.ApplyGeneratedTagsAsync(existingNote, replaceExistingTags: false);
             }
 

@@ -75,39 +75,40 @@ namespace HW5NoteKeeperSolution.Services
                     return;
                 }
 
-                Dictionary<string, Note> notesBySummary = await _context.Notes
-                    .Include(note => note.Tags)
-                    .Where(note => note.UserRealmId == userRealmId)
-                    .ToDictionaryAsync(note => note.Summary, StringComparer.OrdinalIgnoreCase, cancellationToken);
+                // If the user already has any notes at all, skip seeding entirely
+                bool hasNotes = await _context.Notes
+                    .AnyAsync(note => note.UserRealmId == userRealmId, cancellationToken);
+
+                if (hasNotes)
+                {
+                    _memoryCache.Set(cacheKey, true);
+                    return;
+                }
 
                 foreach (SeedNoteDefinition seedNote in SeedNotes)
                 {
-                    if (!notesBySummary.TryGetValue(seedNote.Summary, out Note? note))
+                    Note note = new Note
                     {
-                        note = new Note
-                        {
-                            Id = Guid.NewGuid(),
-                            Summary = seedNote.Summary,
-                            Details = seedNote.Details,
-                            CreatedDateUtc = DateTimeOffset.UtcNow,
-                            UserRealmId = userRealmId
-                        };
+                        Id = Guid.NewGuid(),
+                        Summary = seedNote.Summary,
+                        Details = seedNote.Details,
+                        CreatedDateUtc = DateTimeOffset.UtcNow,
+                        UserRealmId = userRealmId
+                    };
 
-                        await _noteTagService.ApplyGeneratedTagsAsync(note, cancellationToken: cancellationToken);
-                        _context.Notes.Add(note);
-                        notesBySummary[seedNote.Summary] = note;
-                    }
-                    else if (note.Tags.Count == 0)
-                    {
-                        await _noteTagService.ApplyGeneratedTagsAsync(note, cancellationToken: cancellationToken);
-                    }
+                    await _noteTagService.ApplyGeneratedTagsAsync(note, cancellationToken: cancellationToken);
+                    _context.Notes.Add(note);
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                foreach (SeedNoteDefinition seedNote in SeedNotes)
+                // Create blob containers and seed attachments
+                List<Note> seededNotes = await _context.Notes
+                    .Where(note => note.UserRealmId == userRealmId)
+                    .ToListAsync(cancellationToken);
+
+                foreach (Note note in seededNotes)
                 {
-                    Note note = notesBySummary[seedNote.Summary];
                     bool seeded = await _storageInitializer.InitializeAsync(
                         note.Id,
                         note.Summary,
