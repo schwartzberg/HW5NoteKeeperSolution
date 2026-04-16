@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Reflection;
 
-namespace HW5NoteKeeperSolution.Pages
+namespace HW5NoteKeeper.Pages
 {
     /// <summary>
     /// Base Razor Page model that injects the application version into every page's <c>ViewData</c>.

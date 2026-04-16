@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace HW5NoteKeeperSolution.Models
+namespace HW5NoteKeeper.Models
 {
     /// <summary>
     /// Represents an AI-generated keyword tag that is associated with a <see cref="Note"/>.

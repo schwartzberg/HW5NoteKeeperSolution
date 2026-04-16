@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using HW5NoteKeeperSolution.Models;
+using HW5NoteKeeper.Models;
 
-namespace HW5NoteKeeperSolution.Data
+namespace HW5NoteKeeper.Data
 {
     /// <summary>
     /// EF Core <c>DbContext</c> for the NoteKeeper application.

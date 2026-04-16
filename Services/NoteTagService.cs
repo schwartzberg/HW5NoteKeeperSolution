@@ -1,11 +1,11 @@
 using Azure;
-using HW5NoteKeeperSolution.Models;
-using HW5NoteKeeperSolution.Settings;
+using HW5NoteKeeper.Models;
+using HW5NoteKeeper.Settings;
 using Microsoft.Extensions.AI;
 using NJsonSchema;
 using System.Text.Json;
 
-namespace HW5NoteKeeperSolution.Services
+namespace HW5NoteKeeper.Services
 {
     /// <summary>
     /// Generates keyword tags from note detail text using Azure OpenAI.

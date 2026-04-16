@@ -1,10 +1,10 @@
-using HW5NoteKeeperSolution.Data;
-using HW5NoteKeeperSolution.Models;
+using HW5NoteKeeper.Data;
+using HW5NoteKeeper.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 
-namespace HW5NoteKeeperSolution.Services
+namespace HW5NoteKeeper.Services
 {
     /// <summary>
     /// Creates the four default seed notes (with tags and blob attachments) for a new user

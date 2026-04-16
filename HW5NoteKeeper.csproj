@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <UserSecretsId>aspnet-HW5NoteKeeperSolution-5730eaf7-81bf-4cd2-a790-2a012fadd503</UserSecretsId>
+    <UserSecretsId>aspnet-HW5NoteKeeper-5730eaf7-81bf-4cd2-a790-2a012fadd503</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

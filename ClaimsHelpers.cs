@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using System.Security.Principal;
 
-namespace HW5NoteKeeperSolution;
+namespace HW5NoteKeeper;
 
 /// <summary>
 /// Provides helper extension methods for working with claims-based identities in the Razor Pages app.

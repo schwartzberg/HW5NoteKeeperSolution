@@ -1,4 +1,4 @@
-namespace HW5NoteKeeperSolution.Services
+namespace HW5NoteKeeper.Services
 {
     /// <summary>
     /// Defines the contract for idempotent, per-user seed-data initialisation.

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace HW5NoteKeeperSolution
+namespace HW5NoteKeeper
 {
     /// <summary>
     /// Defines the claim types exposed by this app's authenticated <see cref="ClaimsPrincipal"/>

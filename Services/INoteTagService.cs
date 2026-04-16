@@ -1,6 +1,6 @@
-using HW5NoteKeeperSolution.Models;
+using HW5NoteKeeper.Models;
 
-namespace HW5NoteKeeperSolution.Services
+namespace HW5NoteKeeper.Services
 {
     /// <summary>
     /// Defines the contract for generating keyword tags from note detail text

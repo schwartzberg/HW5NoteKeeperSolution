@@ -1,8 +1,8 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using HW5NoteKeeperSolution.Settings;
+using HW5NoteKeeper.Settings;
 
-namespace HW5NoteKeeperSolution.Data
+namespace HW5NoteKeeper.Data
 {
     /// <summary>
     /// Azure Blob Storage implementation of <see cref="IAzureStorageInitializer"/>.
@@ -91,7 +91,8 @@ namespace HW5NoteKeeperSolution.Data
                         },
                         Metadata = new Dictionary<string, string>
                         {
-                            ["noteid"] = noteId.ToString()
+                            ["noteid"] = noteId.ToString(),
+                            ["originalfilename"] = fileName
                         }
                     },
                     cancellationToken);

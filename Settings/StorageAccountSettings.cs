@@ -1,4 +1,4 @@
-namespace HW5NoteKeeperSolution.Settings
+namespace HW5NoteKeeper.Settings
 {
     /// <summary>
     /// Connection and identity settings for the Azure Storage account used by the application.

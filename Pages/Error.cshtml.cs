@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace HW5NoteKeeperSolution.Pages
+namespace HW5NoteKeeper.Pages
 {
     /// <summary>Razor Page model for the application error page. Captures the current request ID for display.</summary>
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

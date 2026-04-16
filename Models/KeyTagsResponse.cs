@@ -1,4 +1,4 @@
-namespace HW5NoteKeeperSolution.Models
+namespace HW5NoteKeeper.Models
 {
     /// <summary>
     /// The JSON response contract returned by the Azure OpenAI tag-generation prompt.

@@ -3,9 +3,9 @@ using Azure.AI.OpenAI;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
-using HW5NoteKeeperSolution.Data;
-using HW5NoteKeeperSolution.Services;
-using HW5NoteKeeperSolution.Settings;
+using HW5NoteKeeper.Data;
+using HW5NoteKeeper.Services;
+using HW5NoteKeeper.Settings;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
@@ -16,7 +16,7 @@ using System.Security.Claims;
 using Microsoft.Data.SqlClient;
 using MSFTBuilder = Microsoft.AspNetCore.Builder;
 
-namespace HW5NoteKeeperSolution
+namespace HW5NoteKeeper
 {
     /// <summary>
     /// Application entry point. Configures the ASP.NET Core host, registers all services,
@@ -195,6 +195,7 @@ namespace HW5NoteKeeperSolution
             });
 
             builder.Services.AddSingleton<IAzureStorageInitializer, AzureStorageInitializer>();
+            builder.Services.AddSingleton<IAzureStorageService, AzureStorageService>();
             builder.Services.AddScoped<INoteTagService, NoteTagService>();
             builder.Services.AddScoped<IUserNoteSeedService, UserNoteSeedService>();
 

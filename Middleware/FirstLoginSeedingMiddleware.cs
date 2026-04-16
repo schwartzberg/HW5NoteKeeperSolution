@@ -1,7 +1,7 @@
-using HW5NoteKeeperSolution.Services;
+using HW5NoteKeeper.Services;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace HW5NoteKeeperSolution.Middleware
+namespace HW5NoteKeeper.Middleware
 {
     /// <summary>
     /// ASP.NET Core middleware that triggers first-login seed data creation for each authenticated user.

@@ -1,4 +1,4 @@
-namespace HW5NoteKeeperSolution.Settings
+namespace HW5NoteKeeper.Settings
 {
     /// <summary>
     /// Configuration settings for the Azure OpenAI deployment used to generate note tags.

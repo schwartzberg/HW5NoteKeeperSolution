@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace HW5NoteKeeperSolution.Pages
+namespace HW5NoteKeeper.Pages
 {
     /// <summary>Razor Page model for the Privacy page.</summary>
     public class PrivacyModel : PageModel

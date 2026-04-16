@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace HW5NoteKeeperSolution.Data
+namespace HW5NoteKeeper.Data
 {
     /// <summary>
     /// Design-time factory for <see cref="NoteKeeperContext"/>, used by EF Core tooling

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace HW5NoteKeeperSolution.Data.Migrations
+namespace HW5NoteKeeper.Data.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

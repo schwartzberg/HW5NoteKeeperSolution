@@ -1,4 +1,4 @@
-namespace HW5NoteKeeperSolution.Settings
+namespace HW5NoteKeeper.Settings
 {
     /// <summary>
     /// Operational settings for Azure Storage queue and container names used by the application.

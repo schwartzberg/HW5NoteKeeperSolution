@@ -1,9 +1,9 @@
-using HW5NoteKeeperSolution.Data;
-using HW5NoteKeeperSolution.Models;
-using HW5NoteKeeperSolution.Services;
+using HW5NoteKeeper.Data;
+using HW5NoteKeeper.Models;
+using HW5NoteKeeper.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HW5NoteKeeperSolution.Pages.Notes
+namespace HW5NoteKeeper.Pages.Notes
 {
     /// <summary>
     /// Razor Page model for creating a new <see cref="Note"/>.

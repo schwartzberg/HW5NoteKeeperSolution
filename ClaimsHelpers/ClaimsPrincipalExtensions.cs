@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace HW5NoteKeeperSolution
+namespace HW5NoteKeeper
 {
     /// <summary>
     /// Extension methods for reading Microsoft Entra claims from a <see cref="ClaimsPrincipal"/>

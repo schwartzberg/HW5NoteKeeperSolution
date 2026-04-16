@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Data.Common;
 
-namespace HW5NoteKeeperSolution.Data;
+namespace HW5NoteKeeper.Data;
 
 /// <summary>
 /// EF Core interceptor that sets the Azure AD access token on every SQL connection

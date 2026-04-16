@@ -1,10 +1,10 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 
-namespace HW5NoteKeeperSolution
+namespace HW5NoteKeeper
 {
     /// <summary>
     /// Legacy extension methods for reading Microsoft Entra claims from a <see cref="ClaimsPrincipal"/>.
-    /// Prefer the methods in <see cref="HW5NoteKeeperSolution.ClaimsPrincipalExtensions"/> which use
+    /// Prefer the methods in <see cref="HW5NoteKeeper.ClaimsPrincipalExtensions"/> which use
     /// the strongly-typed <see cref="AzureADClaimTypes"/> constants.
     /// </summary>
     public static class ClaimsPrincipalExtensions1

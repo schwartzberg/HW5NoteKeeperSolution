@@ -28,7 +28,7 @@
 **3. Prompt Tracking Is Mandatory**
 - Always update `MyPrompts.md` in this project for every relevant user prompt.
 - File location:
-  `C:\Users\schwa\Documents\H_DCE\cloud_computing_openai_e_94\assignments\05-Assignment\HW5NoteKeeperSolution\MyPrompts.md`
+  `C:\Users\schwa\Documents\H_DCE\cloud_computing_openai_e_94\assignments\05-Assignment\HW5NoteKeeper\MyPrompts.md`
 - Keep the entries in chronological order.
 - Include the prompt text, context, and the resolution or implementation result when known.
 
@@ -83,7 +83,7 @@ The app is multi-tenant at the data level:
   - The connection string in `secrets.json` should use the SQL login (username/password) that has `db_owner` or equivalent rights on the Azure SQL database.
   - Example key in `secrets.json`: `"ConnectionStrings:DefaultConnection"` with a connection string using `User ID=...;Password=...` instead of `Authentication=Active Directory Default`.
   - This secret is **never committed** to source control; it lives only in the local user secrets store.
-- In PMC: set **Startup Project** = `HW5NoteKeeperSolution`, set **Default Project** = `HW5NoteKeeperSolution`, then run `Update-Database`.
+- In PMC: set **Startup Project** = `HW5NoteKeeper`, set **Default Project** = `HW5NoteKeeper`, then run `Update-Database`.
 - After `Update-Database` succeeds, you can revert `secrets.json` to use managed identity for normal app operation.
 
 ### Documentation patterns

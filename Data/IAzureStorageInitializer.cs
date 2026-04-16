@@ -1,4 +1,4 @@
-namespace HW5NoteKeeperSolution.Data
+namespace HW5NoteKeeper.Data
 {
     /// <summary>
     /// Defines the contract for initialising Azure Blob Storage containers and seeding

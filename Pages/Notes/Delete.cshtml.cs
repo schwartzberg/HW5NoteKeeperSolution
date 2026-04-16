@@ -1,9 +1,9 @@
-using HW5NoteKeeperSolution.Data;
-using HW5NoteKeeperSolution.Models;
+using HW5NoteKeeper.Data;
+using HW5NoteKeeper.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace HW5NoteKeeperSolution.Pages.Notes
+namespace HW5NoteKeeper.Pages.Notes
 {
     /// <summary>
     /// Razor Page model for the Delete confirmation page.

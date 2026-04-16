@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace HW5NoteKeeperSolution
+namespace HW5NoteKeeper
 {
     /// <summary>
     /// Provides small logging helpers that enrich log messages with caller metadata.

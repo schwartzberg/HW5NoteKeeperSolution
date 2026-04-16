@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace HW5NoteKeeperSolution.Models
+namespace HW5NoteKeeper.Models
 {
     /// <summary>
     /// Represents a multi-tenant note stored in the <c>NoteMultiTenant</c> table.

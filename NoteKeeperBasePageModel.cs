@@ -1,6 +1,6 @@
-using HW5NoteKeeperSolution.Data;
+using HW5NoteKeeper.Data;
 
-namespace HW5NoteKeeperSolution.Pages
+namespace HW5NoteKeeper.Pages
 {
     /// <summary>
     /// Base Razor Page model that provides access to the <see cref="NoteKeeperContext"/> EF Core database context.

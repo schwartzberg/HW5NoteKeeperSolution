@@ -1,4 +1,4 @@
-namespace HW5NoteKeeperSolution.Settings
+namespace HW5NoteKeeper.Settings
 {
     /// <summary>
     /// Application-level limits for notes and attachments per user.
