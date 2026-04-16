@@ -3,20 +3,20 @@ using HW5NoteKeeperSolution.Models;
 namespace HW5NoteKeeperSolution.Services
 {
     /// <summary>
-    /// Defines the contract for generating and attaching AI-produced keyword tags to a <see cref="Note"/>.
+    /// Defines the contract for generating keyword tags from note detail text
+    /// using the configured AI model. Returns a <see cref="KeyTagsResponse"/>
+    /// with raw tag strings — callers are responsible for creating <c>Tag</c>
+    /// entities and attaching them to notes.
     /// </summary>
     public interface INoteTagService
     {
         /// <summary>
-        /// Generates keyword tags for <paramref name="note"/> using the configured AI model and attaches them
-        /// to the note's <c>Tags</c> collection.
+        /// Generates keyword tags from <paramref name="details"/> using Azure OpenAI.
+        /// Includes retry logic with exponential backoff and rate-limit (429) handling.
         /// </summary>
-        /// <param name="note">The note to tag. Its <c>Details</c> text is sent to the AI model.</param>
-        /// <param name="replaceExistingTags">
-        /// When <see langword="true"/> (default) the existing tags are cleared before new ones are added.
-        /// Pass <see langword="false"/> on edit when old tags have already been removed via <c>DbContext</c>.
-        /// </param>
+        /// <param name="details">The note detail text to summarize as keywords.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
-        Task ApplyGeneratedTagsAsync(Note note, bool replaceExistingTags = true, CancellationToken cancellationToken = default);
+        /// <returns>A <see cref="KeyTagsResponse"/> with the generated tag list.</returns>
+        Task<KeyTagsResponse> ApplyGeneratedTags(string details, CancellationToken cancellationToken = default);
     }
 }

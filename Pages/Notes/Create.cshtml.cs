@@ -31,7 +31,9 @@ namespace HW5NoteKeeperSolution.Pages.Notes
         public Note Note { get; set; } = default!;
 
         /// <summary>
-        /// Handles POST requests. Validates the model, generates AI tags, persists the note, and redirects to the Index.
+        /// Handles POST requests. Validates the model, generates AI tags, creates <c>Tag</c>
+        /// entities via <c>Context.Tags.Add</c>, persists everything with a single save, and
+        /// redirects to the Index.
         /// </summary>
         /// <returns>The page on validation error; a redirect to <c>./Index</c> on success.</returns>
         public async Task<IActionResult> OnPostAsync()
@@ -46,8 +48,28 @@ namespace HW5NoteKeeperSolution.Pages.Notes
             Note.CreatedDateUtc = DateTimeOffset.UtcNow;
             Note.ModifiedDateUtc = null;
 
-            await _noteTagService.ApplyGeneratedTagsAsync(Note);
+            KeyTagsResponse tagResponse = await _noteTagService.ApplyGeneratedTags(Note.Details);
+
             Context.Notes.Add(Note);
+
+            if (tagResponse.Tags != null && tagResponse.Tags.Count > 0)
+            {
+                foreach (string tagName in tagResponse.Tags
+                    .Where(t => !string.IsNullOrWhiteSpace(t))
+                    .Select(t => t.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Select(t => t.Length > 30 ? t[..30] : t)
+                    .Take(5))
+                {
+                    Context.Tags.Add(new Tag
+                    {
+                        Id = Guid.NewGuid(),
+                        NoteId = Note.Id,
+                        Name = tagName
+                    });
+                }
+            }
+
             await Context.SaveChangesAsync();
 
             return RedirectToPage("./Index");

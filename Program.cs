@@ -195,7 +195,6 @@ namespace HW5NoteKeeperSolution
             });
 
             builder.Services.AddSingleton<IAzureStorageInitializer, AzureStorageInitializer>();
-            builder.Services.AddScoped<ITagGeneratorService, TagGeneratorService>();
             builder.Services.AddScoped<INoteTagService, NoteTagService>();
             builder.Services.AddScoped<IUserNoteSeedService, UserNoteSeedService>();
 

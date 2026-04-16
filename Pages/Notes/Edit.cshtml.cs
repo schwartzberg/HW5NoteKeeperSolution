@@ -55,8 +55,9 @@ namespace HW5NoteKeeperSolution.Pages.Notes
         }
 
         /// <summary>
-        /// Handles POST requests. Validates ownership, updates the note, optionally regenerates tags
-        /// when <c>Details</c> changed, and redirects to the Index on success.
+        /// Handles POST requests. Validates ownership, updates the note, regenerates tags
+        /// when <c>Details</c> changed (using <c>RemoveRange</c> / <c>Tags.Add</c> to avoid
+        /// EF concurrency conflicts), and performs a single <c>SaveChangesAsync</c>.
         /// </summary>
         /// <returns>The page on validation or ownership error; a redirect to <c>./Index</c> on success.</returns>
         public async Task<IActionResult> OnPostAsync()
@@ -73,7 +74,7 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 return Page();
             }
 
-            // Re-load from DB so we can compare Details and manage tags correctly.
+            // Re-load from DB so we can compare fields and manage tags correctly.
             var existingNote = await Context.Notes
                 .Include(n => n.Tags)
                 .FirstOrDefaultAsync(n => n.Id == Note.Id && n.UserRealmId == User.GetObjectIdentifier());
@@ -83,48 +84,60 @@ namespace HW5NoteKeeperSolution.Pages.Notes
                 return NotFound();
             }
 
-            bool detailsChanged = !string.Equals(existingNote.Details, Note.Details, StringComparison.Ordinal);
+            bool summaryChanged = !string.Equals(existingNote.Summary, Note.Summary, StringComparison.Ordinal);
+            bool detailsChanged = !string.Equals(existingNote.Details?.Trim(), Note.Details?.Trim(), StringComparison.Ordinal);
+
+            if (summaryChanged)
+            {
+                existingNote.Summary = Note.Summary;
+            }
 
             if (detailsChanged)
             {
-                // Save tag deletion separately so the DELETE batch does not
-                // conflict with the subsequent note UPDATE + tag INSERT batch.
-                existingNote.Tags.Clear();
-                await Context.SaveChangesAsync();
+                existingNote.Details = Note.Details;
 
-                // Clear the change tracker and reload so the second save starts
-                // with a clean entity state — avoids DbUpdateConcurrencyException.
-                Context.ChangeTracker.Clear();
-                existingNote = await Context.Notes
-                    .Include(n => n.Tags)
-                    .FirstOrDefaultAsync(n => n.Id == Note.Id && n.UserRealmId == User.GetObjectIdentifier());
+                // Generate new tags from AI
+                KeyTagsResponse tagResponse = await _noteTagService.ApplyGeneratedTags(existingNote.Details);
 
-                if (existingNote == null)
+                // Remove old tags via DbContext (avoids EF tracking conflicts)
+                Context.Tags.RemoveRange(existingNote.Tags);
+
+                // Add new tags with normalization
+                if (tagResponse.Tags != null && tagResponse.Tags.Count > 0)
                 {
-                    return NotFound();
+                    foreach (string tagName in tagResponse.Tags
+                        .Where(t => !string.IsNullOrWhiteSpace(t))
+                        .Select(t => t.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Select(t => t.Length > 30 ? t[..30] : t)
+                        .Take(5))
+                    {
+                        Context.Tags.Add(new Tag
+                        {
+                            Id = Guid.NewGuid(),
+                            NoteId = existingNote.Id,
+                            Name = tagName
+                        });
+                    }
                 }
             }
 
-            existingNote.Summary = Note.Summary;
-            existingNote.Details = Note.Details;
-            existingNote.ModifiedDateUtc = DateTimeOffset.UtcNow;
-             
-            if (detailsChanged)
+            if (summaryChanged || detailsChanged)
             {
-                await _noteTagService.ApplyGeneratedTagsAsync(existingNote, replaceExistingTags: false);
-            }
+                existingNote.ModifiedDateUtc = DateTimeOffset.UtcNow;
 
-            try
-            {
-                await Context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!NoteExists(Note.Id))
+                try
                 {
-                    return NotFound();
+                    await Context.SaveChangesAsync();
                 }
-                throw;
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!NoteExists(Note.Id))
+                    {
+                        return NotFound();
+                    }
+                    throw;
+                }
             }
 
             return RedirectToPage("./Index");

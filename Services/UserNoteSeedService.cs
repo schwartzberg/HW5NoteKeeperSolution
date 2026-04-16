@@ -96,8 +96,27 @@ namespace HW5NoteKeeperSolution.Services
                         UserRealmId = userRealmId
                     };
 
-                    await _noteTagService.ApplyGeneratedTagsAsync(note, cancellationToken: cancellationToken);
+                    KeyTagsResponse tagResponse = await _noteTagService.ApplyGeneratedTags(note.Details, cancellationToken);
+
                     _context.Notes.Add(note);
+
+                    if (tagResponse.Tags != null && tagResponse.Tags.Count > 0)
+                    {
+                        foreach (string tagName in tagResponse.Tags
+                            .Where(t => !string.IsNullOrWhiteSpace(t))
+                            .Select(t => t.Trim())
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .Select(t => t.Length > 30 ? t[..30] : t)
+                            .Take(5))
+                        {
+                            _context.Tags.Add(new Tag
+                            {
+                                Id = Guid.NewGuid(),
+                                NoteId = note.Id,
+                                Name = tagName
+                            });
+                        }
+                    }
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
