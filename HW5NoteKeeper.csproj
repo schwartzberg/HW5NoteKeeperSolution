@@ -36,6 +36,14 @@
     <PackageReference Include="NJsonSchema" Version="11.5.2" />
   </ItemGroup>
 
+  <!-- Exclude the test project subdirectory from compilation and content -->
+  <ItemGroup>
+    <Compile Remove="HW5NoteKeeper.Tests\**" />
+    <Content Remove="HW5NoteKeeper.Tests\**" />
+    <EmbeddedResource Remove="HW5NoteKeeper.Tests\**" />
+    <None Remove="HW5NoteKeeper.Tests\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="AzureStorageAttachments\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
